@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Building from "./Building";
+import ProjectScenery from "./ProjectScenery";
+import type { Project } from "@/lib/projects";
 
 export default function ProjectsDoor() {
   const [open, setOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   return (
     <div className="relative flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6 py-24 text-center">
@@ -40,21 +44,22 @@ export default function ProjectsDoor() {
         )}
       </div>
 
+      {!open && (
+        <p className="max-w-sm text-sm text-ink-faint">
+          15 floors. 15 projects. Knock to walk through them.
+        </p>
+      )}
+
       <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="glass max-w-lg rounded-lg px-6 py-5"
-          >
-            <p className="font-[family-name:var(--font-data)] text-sm text-ink-dim">
-              The building — 15 floors, 15 projects — goes here next.
-            </p>
-          </motion.div>
+        {selectedProject && (
+          <ProjectScenery
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+          />
         )}
       </AnimatePresence>
+
+      {open && <Building onSelectProject={setSelectedProject} />}
     </div>
   );
 }
