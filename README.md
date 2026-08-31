@@ -6,7 +6,7 @@ Cinematic story-mode portfolio. Built with Next.js, Three.js, Framer Motion.
 - [x] Design tokens (colors, type, glass utility) — `app/globals.css`
 - [x] Hero — terminal boot sequence + tagline
 - [x] Projects door — knock/click interaction, opens (building floors coming next)
-- [x] Building — 15 floors as an actual stacked elevation (floor slabs on top of one another, rooftop/base caps), "close door" exit reachable from any floor
+- [x] Building — 15 floors as stacked elevation; single activeFloor state syncs right-side slab highlight, a brass light-beam from that exact slab to the center panel, and the center floor content; center panel has architectural depth cues (wall recede, ceiling/floor edges, window strip, warm glow where the beam lands)
 - [x] Project scenery — animated node diagram, hover-to-explain roles, case-study modal (Problem/Approach/Challenge/Result)
 - [ ] Metrics counters
 - [ ] Hackathon certificate wall (grid, click-to-zoom)
