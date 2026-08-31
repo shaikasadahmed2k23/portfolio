@@ -101,7 +101,7 @@ export default function Building({
         </div>
       </nav>
 
-      <div ref={containerRef} className="flex flex-col">
+      <div ref={containerRef} className="flex flex-col items-center">
         {PROJECTS.map((project) => (
           <div
             key={project.id}
@@ -109,27 +109,52 @@ export default function Building({
               floorRefs.current[project.floor] = el;
             }}
             data-floor={project.floor}
-            className="flex min-h-screen w-full items-center border-t border-[var(--glass-border)] px-6 sm:px-12 md:px-20"
+            className="flex min-h-screen w-full items-center justify-center px-6 sm:px-12 md:px-20"
           >
             <button
               type="button"
               onClick={() => onSelectProject(project)}
-              className="group flex w-full max-w-3xl flex-col items-start gap-2 text-left"
+              className="group relative w-full max-w-3xl overflow-hidden rounded-sm text-left"
             >
-              <span className="font-[family-name:var(--font-data)] text-xs text-brass">
-                FLOOR {String(project.floor).padStart(2, "0")}
-              </span>
-              <motion.span
-                whileHover={{ x: 8 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="font-[family-name:var(--font-display)] text-4xl text-ink sm:text-5xl md:text-6xl"
+              {/* Floor-slab frame: brass top/bottom edges like a real building floor */}
+              <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-brass to-transparent opacity-70" />
+
+              <div
+                className="relative px-8 py-12 sm:px-12"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(90deg, rgba(237,231,227,0.035) 0 1px, transparent 1px 64px)",
+                }}
               >
-                {project.name}
-              </motion.span>
-              <span className="text-base text-ink-dim">{project.tagline}</span>
-              <span className="mt-3 font-[family-name:var(--font-data)] text-xs text-ink-faint opacity-0 transition-opacity group-hover:opacity-100">
-                enter floor →
-              </span>
+                {/* facade window strip */}
+                <div className="mb-6 flex gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="h-2 w-6 rounded-[1px] bg-brass/20 transition-colors group-hover:bg-brass/50"
+                    />
+                  ))}
+                </div>
+
+                <span className="font-[family-name:var(--font-data)] text-xs text-brass">
+                  FLOOR {String(project.floor).padStart(2, "0")}
+                </span>
+                <motion.h3
+                  whileHover={{ x: 6 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="mt-2 font-[family-name:var(--font-display)] text-4xl text-ink sm:text-5xl md:text-6xl"
+                >
+                  {project.name}
+                </motion.h3>
+                <p className="mt-3 max-w-md text-base text-ink-dim">
+                  {project.tagline}
+                </p>
+                <span className="mt-6 inline-block font-[family-name:var(--font-data)] text-xs text-ink-faint opacity-0 transition-opacity group-hover:opacity-100">
+                  enter floor →
+                </span>
+              </div>
+
+              <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-brass to-transparent opacity-70" />
             </button>
           </div>
         ))}
