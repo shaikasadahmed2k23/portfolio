@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  /* Base surfaces */
+  --color-void: #120e14;
+  --color-surface: #1b1420;
+  --color-surface-2: #241a2b;
+
+  /* Signature accents */
+  --color-crimson: #c81e3a;
+  --color-crimson-glow: #e8455f;
+  --color-brass: #d4af37;
+  --color-brass-dim: #8f7626;
+
+  /* Text */
+  --color-ink: #ede7e3;
+  --color-ink-dim: #a89fa8;
+  --color-ink-faint: #6b6270;
+
+  /* Glass */
+  --glass-bg: rgba(27, 20, 32, 0.55);
+  --glass-border: rgba(237, 231, 227, 0.08);
+}
+
+@theme inline {
+  --color-void: var(--color-void);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-crimson: var(--color-crimson);
+  --color-crimson-glow: var(--color-crimson-glow);
+  --color-brass: var(--color-brass);
+  --color-brass-dim: var(--color-brass-dim);
+  --color-ink: var(--color-ink);
+  --color-ink-dim: var(--color-ink-dim);
+  --color-ink-faint: var(--color-ink-faint);
+
+  --font-display: var(--font-instrument-serif);
+  --font-body: var(--font-manrope);
+  --font-data: var(--font-jetbrains-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-body), sans-serif;
+}
+
+::selection {
+  background: var(--color-crimson);
+  color: var(--color-ink);
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+}
+
+/* Respect reduced motion everywhere by default */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
