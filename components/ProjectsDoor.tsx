@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Building from "./Building";
 import ProjectScenery from "./ProjectScenery";
@@ -9,9 +9,15 @@ import type { Project } from "@/lib/projects";
 export default function ProjectsDoor() {
   const [open, setOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const doorRef = useRef<HTMLDivElement>(null);
+
+  const closeDoor = () => {
+    setOpen(false);
+    doorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   return (
-    <div className="relative flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6 py-24 text-center">
+    <div ref={doorRef} className="relative flex min-h-[80vh] flex-col items-center justify-center gap-8 px-6 py-24 text-center">
       <div style={{ perspective: 1200 }} className="relative">
         {/* Door frame */}
         <div className="relative h-72 w-48 rounded-t-md border border-[var(--glass-border)] bg-surface-2 shadow-[0_0_60px_-20px_var(--color-crimson)] sm:h-96 sm:w-64">
@@ -59,7 +65,7 @@ export default function ProjectsDoor() {
         )}
       </AnimatePresence>
 
-      {open && <Building onSelectProject={setSelectedProject} />}
+      {open && <Building onSelectProject={setSelectedProject} onExit={closeDoor} />}
     </div>
   );
 }
