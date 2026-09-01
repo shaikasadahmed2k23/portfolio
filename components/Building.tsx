@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PROJECTS, type Project } from "@/lib/projects";
 
@@ -322,17 +322,18 @@ export default function Building({
         className={`fixed left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-opacity duration-300 sm:flex ${
           showChrome ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
+        style={{ "--bw": "clamp(320px, 46vw, 640px)" } as CSSProperties}
       >
-        <div className="relative h-8 w-80">
+        <div className="relative h-8 w-[calc(var(--bw)*0.833)]">
           <div
             className="absolute inset-x-3 bottom-0 h-8 bg-surface-2"
             style={{ clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)" }}
           />
         </div>
-        <div className="h-1.5 w-96 bg-surface-2" />
+        <div className="h-1.5 w-[var(--bw)] bg-surface-2" />
 
         <div
-          className="relative flex w-96 flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
+          className="relative flex w-[var(--bw)] flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
           style={{
             boxShadow:
               "inset 10px 0 18px -10px rgba(0,0,0,0.6), inset -10px 0 18px -10px rgba(0,0,0,0.4), 0 30px 80px -20px rgba(0,0,0,0.7)",
@@ -413,7 +414,10 @@ export default function Building({
           })}
         </div>
 
-        <div className="h-2.5 w-[27rem] rounded-b-sm bg-surface-2" style={{ marginTop: -1 }} />
+        <div
+          className="h-2.5 w-[calc(var(--bw)*1.125)] rounded-b-sm bg-surface-2"
+          style={{ marginTop: -1 }}
+        />
       </div>
 
       {/* Invisible per-floor scroll sections — drive scroll-snap + the
