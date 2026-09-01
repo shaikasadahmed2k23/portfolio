@@ -7,7 +7,13 @@ import { PROJECTS, type Project } from "@/lib/projects";
 const FLOOR_H = 22; // px height of each slab in the building visual
 const FLOOR_GAP = 3;
 
-type Beam = { top: number; left: number; width: number } | null;
+type Beam = {
+  apexX: number;
+  apexY: number;
+  baseX: number;
+  baseTop: number;
+  baseBottom: number;
+} | null;
 
 export default function Building({
   onSelectProject,
@@ -43,8 +49,10 @@ export default function Building({
   }, []);
 
   // Recompute the beam whenever the active floor changes (or on resize) —
-  // it reads live DOM positions of the right-side slab and the center panel,
-  // so it always originates from the exact selected floor.
+  // it reads live DOM positions of the right-side mini-building floor
+  // (the source) and the center panel (the destination), so the V always
+  // originates exactly from the selected floor's lit window and widens as
+  // it travels left toward the center project.
   const computeBeam = useCallback(() => {
     const slabEl = slabRefs.current[activeFloor];
     const panelEl = panelRefs.current[activeFloor];
@@ -54,10 +62,31 @@ export default function Building({
     }
     const slabRect = slabEl.getBoundingClientRect();
     const panelRect = panelEl.getBoundingClientRect();
-    const top = slabRect.top + slabRect.height / 2;
-    const left = panelRect.right;
-    const width = Math.max(slabRect.left - panelRect.right, 0);
-    setBeam({ top, left, width });
+
+    // Apex: the exact lit window on the right mini-building — its left
+    // edge (the side facing the center), vertically centered on the floor.
+    const apexX = slabRect.left;
+    const apexY = slabRect.top + slabRect.height / 2;
+
+    // Base: the right edge of the center panel, spread into a cone that's
+    // a fraction of the panel's height so it visibly "widens toward the
+    // center" without swallowing the whole card.
+    const baseX = panelRect.right;
+    const panelCenterY = panelRect.top + panelRect.height / 2;
+    const baseHalfHeight = Math.max(panelRect.height * 0.32, 46);
+
+    if (apexX <= baseX) {
+      setBeam(null);
+      return;
+    }
+
+    setBeam({
+      apexX,
+      apexY,
+      baseX,
+      baseTop: panelCenterY - baseHalfHeight,
+      baseBottom: panelCenterY + baseHalfHeight,
+    });
   }, [activeFloor]);
 
   useEffect(() => {
@@ -88,73 +117,145 @@ export default function Building({
         ← close door
       </button>
 
-      {/* Light beam: originates from the active floor's slab, travels to the center panel */}
+      {/* Light beam: a V-shaped cone that ORIGINATES at the selected floor's
+          lit window on the right mini-building and WIDENS as it travels
+          right -> left, terminating on the center project. Never a straight
+          horizontal line, and never sourced from the center. */}
       {beam && (
-        <motion.div
-          key={activeFloor}
-          initial={{ opacity: 0, scaleX: 0.6 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          style={{
-            position: "fixed",
-            top: beam.top - 1,
-            left: beam.left,
-            width: beam.width,
-            transformOrigin: "right center",
-          }}
-          className="pointer-events-none z-10 hidden sm:block"
+        <svg
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-10 hidden h-full w-full sm:block"
         >
-          <div
-            className="h-[2px] w-full bg-gradient-to-l from-brass via-brass/50 to-transparent"
-            style={{
-              boxShadow:
-                "0 0 10px 2px var(--color-brass), 0 0 26px 6px rgba(212,175,55,0.22)",
-            }}
+          <defs>
+            <linearGradient
+              id="beamFill"
+              gradientUnits="userSpaceOnUse"
+              x1={beam.apexX}
+              y1={beam.apexY}
+              x2={beam.baseX}
+              y2={beam.apexY}
+            >
+              <stop offset="0%" stopColor="var(--color-brass)" stopOpacity="0.85" />
+              <stop offset="55%" stopColor="var(--color-brass)" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="var(--color-brass)" stopOpacity="0.04" />
+            </linearGradient>
+            <filter id="beamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <motion.polygon
+            key={activeFloor}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            style={{ transformOrigin: `${beam.apexX}px ${beam.apexY}px` }}
+            points={`${beam.apexX},${beam.apexY} ${beam.baseX},${beam.baseTop} ${beam.baseX},${beam.baseBottom}`}
+            fill="url(#beamFill)"
+            filter="url(#beamGlow)"
           />
-        </motion.div>
+
+          {/* Bright core spine down the middle of the cone, and a spark at the source */}
+          <motion.line
+            key={`core-${activeFloor}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.9 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+            x1={beam.apexX}
+            y1={beam.apexY}
+            x2={beam.baseX}
+            y2={(beam.baseTop + beam.baseBottom) / 2}
+            stroke="var(--color-brass)"
+            strokeWidth={1.5}
+            strokeOpacity={0.6}
+          />
+          <motion.circle
+            key={`spark-${activeFloor}`}
+            initial={{ opacity: 0, r: 0 }}
+            animate={{ opacity: 1, r: 3.5 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            cx={beam.apexX}
+            cy={beam.apexY}
+            fill="var(--color-brass)"
+            filter="url(#beamGlow)"
+          />
+        </svg>
       )}
 
-      {/* Real building elevation: floors stacked one on top of another */}
+      {/* Right mini-building: the light SOURCE. Built to read as an actual
+          miniature elevation — roof cap, receding side walls for depth,
+          a facade with a real window pair per floor, and a ground base.
+          The active floor's window is the only one lit; that lit window is
+          exactly where the beam's apex is computed from above. */}
       <nav
         aria-label="Building floors"
         className="fixed right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center sm:flex"
       >
-        {/* rooftop cap */}
-        <div className="h-2 w-14 rounded-t-sm bg-surface-2" />
-        <div className="flex flex-col-reverse gap-[3px] border-x border-[var(--glass-border)] bg-surface/60 px-1.5 py-1.5 backdrop-blur">
-          {[...PROJECTS].reverse().map((p) => (
-            <button
-              key={p.floor}
-              type="button"
-              ref={(el) => {
-                slabRefs.current[p.floor] = el;
-              }}
-              onClick={() => scrollToFloor(p.floor)}
-              aria-label={`Go to floor ${p.floor}: ${p.name}`}
-              aria-current={activeFloor === p.floor}
-              className="group relative flex items-center"
-              style={{ height: FLOOR_H }}
-            >
-              <span
-                className={`block w-11 rounded-[2px] border transition-all ${
-                  activeFloor === p.floor
-                    ? "border-brass bg-brass/25 shadow-[0_0_10px_var(--color-brass)]"
-                    : "border-[var(--glass-border)] bg-ink/5 group-hover:border-ink-dim"
-                }`}
-                style={{ height: FLOOR_H - 6 }}
-              />
-              <span
-                className={`pointer-events-none absolute right-14 whitespace-nowrap rounded bg-surface px-2 py-1 font-[family-name:var(--font-data)] text-[11px] transition-opacity ${
-                  activeFloor === p.floor
-                    ? "text-brass opacity-100"
-                    : "text-ink-dim opacity-0 group-hover:opacity-100"
-                }`}
-              >
-                {String(p.floor).padStart(2, "0")} · {p.name}
-              </span>
-            </button>
-          ))}
+        {/* roof: peaked cap + parapet line for a real rooftop silhouette */}
+        <div className="relative h-3 w-16">
+          <div
+            className="absolute inset-x-1 bottom-0 h-3 bg-surface-2"
+            style={{ clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)" }}
+          />
         </div>
+        <div className="h-1 w-[72px] bg-surface-2" />
+
+        {/* facade: side walls give it depth via inset shading; floors are
+            separated by real divider lines rather than just gaps */}
+        <div
+          className="relative flex w-[72px] flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/70 via-surface/55 to-surface-2/70 backdrop-blur"
+          style={{
+            boxShadow:
+              "inset 6px 0 10px -6px rgba(0,0,0,0.55), inset -6px 0 10px -6px rgba(0,0,0,0.35)",
+          }}
+        >
+          {[...PROJECTS].reverse().map((p) => {
+            const isActive = activeFloor === p.floor;
+            return (
+              <button
+                key={p.floor}
+                type="button"
+                ref={(el) => {
+                  slabRefs.current[p.floor] = el;
+                }}
+                onClick={() => scrollToFloor(p.floor)}
+                aria-label={`Go to floor ${p.floor}: ${p.name}`}
+                aria-current={isActive}
+                className="group relative flex items-center justify-center gap-[3px] border-t border-[var(--glass-border)]/60 px-2 first:border-t-0"
+                style={{ height: FLOOR_H }}
+              >
+                {/* two facade windows per floor — the selected floor's
+                    windows are the lit source the V-beam originates from */}
+                {[0, 1].map((w) => (
+                  <span
+                    key={w}
+                    className={`block w-5 rounded-[1px] border transition-all duration-300 ${
+                      isActive
+                        ? "border-brass bg-brass shadow-[0_0_9px_2px_var(--color-brass),0_0_18px_4px_rgba(212,175,55,0.35)]"
+                        : "border-[var(--glass-border)] bg-ink/10 group-hover:border-ink-dim group-hover:bg-ink/20"
+                    }`}
+                    style={{ height: FLOOR_H - 10 }}
+                  />
+                ))}
+
+                <span
+                  className={`pointer-events-none absolute right-[88px] whitespace-nowrap rounded bg-surface px-2 py-1 font-[family-name:var(--font-data)] text-[11px] transition-opacity ${
+                    isActive
+                      ? "text-brass opacity-100"
+                      : "text-ink-dim opacity-0 group-hover:opacity-100"
+                  }`}
+                >
+                  {String(p.floor).padStart(2, "0")} · {p.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* ground base */}
         <div className="h-2 w-20 rounded-b-sm bg-surface-2" style={{ marginTop: -1 }} />
         <div className="mt-2 font-[family-name:var(--font-data)] text-[10px] text-ink-faint">
