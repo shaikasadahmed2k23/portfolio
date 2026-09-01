@@ -31,7 +31,26 @@ export default function Building({
   const panelRefs = useRef<Record<number, HTMLButtonElement | null>>({});
   const slabRefs = useRef<Record<number, HTMLButtonElement | null>>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const facadeRef = useRef<HTMLDivElement>(null);
+  const [highlightTop, setHighlightTop] = useState(0);
 
+  // Scroll-snap makes the flow read as floor-by-floor (like riding an
+  // elevator) instead of free-scrolling through arbitrary positions.
+  // Scoped to the viewport only while the building is open, restored on exit.
+  useEffect(() => {
+    const html = document.documentElement;
+    const prevSnap = html.style.scrollSnapType;
+    html.style.scrollSnapType = "y mandatory";
+    return () => {
+      html.style.scrollSnapType = prevSnap;
+    };
+  }, []);
+
+  // Centerline detection instead of a ratio threshold: fires the moment a
+  // floor's section crosses the middle band of the viewport, regardless of
+  // scroll speed or section height. The old threshold: 0.6 approach could
+  // silently fail to fire during fast/continuous scrolling, which read as
+  // "stuck" or "not moving" — this fixes that.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -42,11 +61,19 @@ export default function Building({
           }
         });
       },
-      { threshold: 0.6 }
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
     );
     Object.values(floorRefs.current).forEach((el) => el && observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  // Slide the mini-building's highlight smoothly from its previous floor to
+  // the new one (a real animated move, not a discrete jump) whenever the
+  // active floor changes.
+  useEffect(() => {
+    const el = slabRefs.current[activeFloor];
+    if (el) setHighlightTop(el.offsetTop);
+  }, [activeFloor]);
 
   // Recompute the beam whenever the active floor changes (or on resize) —
   // it reads live DOM positions of the right-side mini-building floor
@@ -207,12 +234,30 @@ export default function Building({
         {/* facade: side walls give it depth via inset shading; floors are
             separated by real divider lines rather than just gaps */}
         <div
+          ref={facadeRef}
           className="relative flex w-[72px] flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/70 via-surface/55 to-surface-2/70 backdrop-blur"
           style={{
             boxShadow:
               "inset 6px 0 10px -6px rgba(0,0,0,0.55), inset -6px 0 10px -6px rgba(0,0,0,0.35)",
           }}
         >
+          {/* Single sliding highlight — animates its own top position
+              between floors so the source visibly TRAVELS up/down the
+              building as you scroll, instead of one window snapping off
+              and another snapping on. */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 z-10"
+            style={{ height: FLOOR_H }}
+            animate={{ top: highlightTop }}
+            transition={{ type: "spring", stiffness: 300, damping: 32 }}
+          >
+            <div
+              className="mx-auto h-full w-[64px] rounded-[2px] bg-brass/10"
+              style={{ boxShadow: "inset 0 0 0 1px rgba(212,175,55,0.55)" }}
+            />
+          </motion.div>
+
           {[...PROJECTS].reverse().map((p) => {
             const isActive = activeFloor === p.floor;
             return (
@@ -263,6 +308,23 @@ export default function Building({
         </div>
       </nav>
 
+      {/* Center = the SAME building, walked through floor by floor. A roof
+          caps the very top of the scroll and a base caps the very bottom,
+          using the identical motif as the right mini-building, so opening
+          the door drops you inside that structure rather than a generic
+          stack of cards. */}
+      <div className="hidden w-full justify-center sm:flex">
+        <div className="relative h-6 w-48">
+          <div
+            className="absolute inset-x-2 bottom-0 h-6 bg-surface-2"
+            style={{ clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)" }}
+          />
+        </div>
+      </div>
+      <div className="hidden w-full justify-center sm:flex">
+        <div className="h-1 w-64 bg-surface-2" />
+      </div>
+
       <div ref={containerRef} className="flex flex-col items-center">
         {PROJECTS.map((project) => (
           <div
@@ -271,16 +333,32 @@ export default function Building({
               floorRefs.current[project.floor] = el;
             }}
             data-floor={project.floor}
+            style={{ scrollSnapAlign: "center" }}
             className="flex min-h-screen w-full items-center justify-center px-6 sm:px-12 md:px-20"
           >
             <div className="relative w-full max-w-3xl">
-              {/* Wall recede either side — architectural depth cue */}
+              {/* Wall recede either side — same window-slit facade language
+                  as the right mini-building, so the two read as one structure */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-y-6 -left-10 -right-10 -z-10 hidden sm:block"
+                className="pointer-events-none absolute inset-y-6 -left-10 w-8 -z-10 hidden sm:block"
                 style={{
-                  background:
-                    "linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.05) 12%, transparent 24%, transparent 76%, rgba(212,175,55,0.05) 88%, transparent 100%)",
+                  backgroundImage:
+                    "repeating-linear-gradient(180deg, rgba(212,175,55,0.10) 0 8px, transparent 8px 26px)",
+                  maskImage: "linear-gradient(180deg, transparent, black 18%, black 82%, transparent)",
+                  WebkitMaskImage:
+                    "linear-gradient(180deg, transparent, black 18%, black 82%, transparent)",
+                }}
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-6 -right-10 w-8 -z-10 hidden sm:block"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(180deg, rgba(212,175,55,0.10) 0 8px, transparent 8px 26px)",
+                  maskImage: "linear-gradient(180deg, transparent, black 18%, black 82%, transparent)",
+                  WebkitMaskImage:
+                    "linear-gradient(180deg, transparent, black 18%, black 82%, transparent)",
                 }}
               />
 
@@ -317,13 +395,14 @@ export default function Building({
                     />
                   )}
 
-                  {/* facade window strip */}
-                  <div className="relative mb-6 flex gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className="h-2 w-6 rounded-[1px] bg-brass/20 transition-colors group-hover:bg-brass/50"
-                      />
+                  {/* facade window strip — same paired-window motif as the
+                      right mini-building's floors */}
+                  <div className="relative mb-6 flex gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <span key={i} className="flex gap-[3px]">
+                        <span className="h-3 w-3 rounded-[1px] border border-brass/25 bg-brass/15 transition-colors group-hover:bg-brass/40" />
+                        <span className="h-3 w-3 rounded-[1px] border border-brass/25 bg-brass/15 transition-colors group-hover:bg-brass/40" />
+                      </span>
                     ))}
                   </div>
 
@@ -351,6 +430,10 @@ export default function Building({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="hidden w-full justify-center sm:flex">
+        <div className="h-2 w-64 rounded-b-sm bg-surface-2" />
       </div>
     </div>
   );
