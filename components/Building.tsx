@@ -37,7 +37,24 @@ export default function Building({
   const centerRowRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const centerWindowRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const [highlightTop, setHighlightTop] = useState(0);
+  // Whether we've actually scrolled into the building yet. The fixed nav,
+  // center building, and beam should only exist once the person has
+  // scrolled past the door — otherwise they sit on top of the door/hero
+  // content when scrolled all the way back up.
+  const [showChrome, setShowChrome] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowChrome(entry.boundingClientRect.top <= 0),
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   // Scroll-snap makes the flow read as floor-by-floor (like riding an
   // elevator) instead of free-scrolling through arbitrary positions.
@@ -150,7 +167,7 @@ export default function Building({
       {/* Light beam: a V-shaped cone from the RIGHT mini-building's lit
           window to the CENTER building's lit window. Never a straight
           line, never sourced from the center. */}
-      {beam && (
+      {beam && showChrome && (
         <svg
           aria-hidden
           className="pointer-events-none fixed inset-0 z-10 hidden h-full w-full sm:block"
@@ -218,7 +235,9 @@ export default function Building({
           roof, recessed facade walls, a real window pair per floor, base. */}
       <nav
         aria-label="Building floors"
-        className="fixed right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center sm:flex"
+        className={`fixed right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center transition-opacity duration-300 sm:flex ${
+          showChrome ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
       >
         <div className="relative h-3 w-16">
           <div
@@ -299,17 +318,21 @@ export default function Building({
           floor stays a plain lit-or-dim window row, exactly like the mini
           one. Click the open floor to enter it; click any other to scroll
           to it. */}
-      <div className="fixed left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center sm:flex">
-        <div className="relative h-8 w-56">
+      <div
+        className={`fixed left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-opacity duration-300 sm:flex ${
+          showChrome ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <div className="relative h-8 w-80">
           <div
             className="absolute inset-x-3 bottom-0 h-8 bg-surface-2"
             style={{ clipPath: "polygon(0% 100%, 50% 0%, 100% 100%)" }}
           />
         </div>
-        <div className="h-1.5 w-64 bg-surface-2" />
+        <div className="h-1.5 w-96 bg-surface-2" />
 
         <div
-          className="relative flex w-64 flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
+          className="relative flex w-96 flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
           style={{
             boxShadow:
               "inset 10px 0 18px -10px rgba(0,0,0,0.6), inset -10px 0 18px -10px rgba(0,0,0,0.4), 0 30px 80px -20px rgba(0,0,0,0.7)",
@@ -377,7 +400,7 @@ export default function Building({
                         <h3 className="font-[family-name:var(--font-display)] text-2xl text-ink sm:text-3xl">
                           {project.name}
                         </h3>
-                        <p className="mt-1 max-w-[15rem] text-sm text-ink-dim">{project.tagline}</p>
+                        <p className="mt-1 max-w-[20rem] text-sm text-ink-dim">{project.tagline}</p>
                         <span className="mt-3 inline-block font-[family-name:var(--font-data)] text-[11px] text-ink-faint opacity-0 transition-opacity group-hover:opacity-100">
                           enter floor →
                         </span>
@@ -390,7 +413,7 @@ export default function Building({
           })}
         </div>
 
-        <div className="h-2.5 w-72 rounded-b-sm bg-surface-2" style={{ marginTop: -1 }} />
+        <div className="h-2.5 w-[27rem] rounded-b-sm bg-surface-2" style={{ marginTop: -1 }} />
       </div>
 
       {/* Invisible per-floor scroll sections — drive scroll-snap + the
@@ -398,6 +421,7 @@ export default function Building({
           project content now lives inside the fixed center building above,
           so the beam has a stable, non-scrolling destination. */}
       <div ref={containerRef} className="flex flex-col items-center">
+        <div ref={sentinelRef} aria-hidden className="h-px w-full" />
         {VISIBLE_PROJECTS.map((project) => (
           <div
             key={project.id}
