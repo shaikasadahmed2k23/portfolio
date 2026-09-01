@@ -322,7 +322,13 @@ export default function Building({
         className={`fixed left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-opacity duration-300 sm:flex ${
           showChrome ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
-        style={{ "--bw": "clamp(320px, 46vw, 640px)" } as CSSProperties}
+        style={
+          {
+            "--bw": "clamp(320px, 46vw, 640px)",
+            "--bh": "clamp(560px, 88vh, 940px)",
+            height: "var(--bh)",
+          } as CSSProperties
+        }
       >
         <div className="relative h-8 w-[calc(var(--bw)*0.833)]">
           <div
@@ -333,7 +339,7 @@ export default function Building({
         <div className="h-1.5 w-[var(--bw)] bg-surface-2" />
 
         <div
-          className="relative flex w-[var(--bw)] flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
+          className="relative flex w-[var(--bw)] min-h-0 flex-1 flex-col-reverse border-x border-[var(--glass-border)] bg-gradient-to-b from-surface/85 via-surface/65 to-surface-2/85 shadow-2xl backdrop-blur"
           style={{
             boxShadow:
               "inset 10px 0 18px -10px rgba(0,0,0,0.6), inset -10px 0 18px -10px rgba(0,0,0,0.4), 0 30px 80px -20px rgba(0,0,0,0.7)",
@@ -350,7 +356,7 @@ export default function Building({
                 layout
                 onLayoutAnimationComplete={handleRowLayoutComplete}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="relative border-t border-[var(--glass-border)]/50 first:border-t-0"
+                className="relative flex-1 border-t border-[var(--glass-border)]/50 first:border-t-0"
               >
                 <button
                   type="button"
@@ -359,7 +365,7 @@ export default function Building({
                     isActive ? `Open ${project.name} case study` : `Go to floor ${project.floor}: ${project.name}`
                   }
                   aria-current={isActive}
-                  className="group flex w-full flex-col gap-3 px-5 py-3 text-left"
+                  className="group flex h-full w-full flex-col justify-center gap-3 px-5 py-3 text-left"
                   style={{ minHeight: CENTER_FLOOR_H }}
                 >
                   <div className="flex items-center gap-3">
