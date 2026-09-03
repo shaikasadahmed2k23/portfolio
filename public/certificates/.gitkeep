@@ -1,0 +1,3 @@
+Drop certificate images here (e.g. agentathon-2025.jpg), then set the
+matching `image: "/certificates/agentathon-2025.jpg"` on that entry in
+lib/certificates.ts.
