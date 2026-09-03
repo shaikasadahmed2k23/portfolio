@@ -1,5 +1,6 @@
 import TerminalBoot from "@/components/TerminalBoot";
 import ProjectsDoor from "@/components/ProjectsDoor";
+import HackathonWall from "@/components/HackathonWall";
 
 export default function Home() {
   return (
@@ -19,6 +20,8 @@ export default function Home() {
       </section>
 
       <ProjectsDoor />
+
+      <HackathonWall />
     </main>
   );
 }
