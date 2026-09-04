@@ -1,6 +1,7 @@
 import TerminalBoot from "@/components/TerminalBoot";
 import ProjectsDoor from "@/components/ProjectsDoor";
 import HackathonWall from "@/components/HackathonWall";
+import AskAsadBike from "@/components/AskAsadBike";
 
 export default function Home() {
   return (
@@ -22,6 +23,8 @@ export default function Home() {
       <ProjectsDoor />
 
       <HackathonWall />
+
+      <AskAsadBike />
     </main>
   );
 }
