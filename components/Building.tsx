@@ -4,9 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { motion, AnimatePresence } from "framer-motion";
 import { PROJECTS, type Project } from "@/lib/projects";
 
-// TEMP: testing with a handful of floors first, per Asad's request — bump
-// this back up toward PROJECTS.length once the building/beam feel right.
-const VISIBLE_COUNT = 4;
+const VISIBLE_COUNT = 15;
 const VISIBLE_PROJECTS = PROJECTS.slice(-VISIBLE_COUNT);
 
 const FLOOR_H = 22; // px height of each slab in the RIGHT mini building
@@ -325,7 +323,7 @@ export default function Building({
         style={
           {
             "--bw": "clamp(320px, 46vw, 640px)",
-            "--bh": "clamp(560px, 88vh, 940px)",
+            "--bh": "clamp(760px, 90vh, 980px)",
             height: "var(--bh)",
           } as CSSProperties
         }
