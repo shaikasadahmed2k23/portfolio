@@ -1,5 +1,6 @@
 import TerminalBoot from "@/components/TerminalBoot";
 import ProblemSection from "@/components/ProblemSection";
+import LiveDemoSection from "@/components/LiveDemoSection";
 import ProjectsDoor from "@/components/ProjectsDoor";
 import MetricsSection from "@/components/MetricsSection";
 import HackathonWall from "@/components/HackathonWall";
@@ -24,6 +25,8 @@ export default function Home() {
       </section>
 
       <ProblemSection />
+
+      <LiveDemoSection />
 
       <ProjectsDoor />
 
