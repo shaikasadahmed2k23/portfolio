@@ -3,6 +3,7 @@ import ProblemSection from "@/components/ProblemSection";
 import ProjectsDoor from "@/components/ProjectsDoor";
 import MetricsSection from "@/components/MetricsSection";
 import HackathonWall from "@/components/HackathonWall";
+import ClosingSection from "@/components/ClosingSection";
 import AskAsadBike from "@/components/AskAsadBike";
 
 export default function Home() {
@@ -29,6 +30,8 @@ export default function Home() {
       <MetricsSection />
 
       <HackathonWall />
+
+      <ClosingSection />
 
       <AskAsadBike />
     </main>
