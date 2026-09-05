@@ -1,4 +1,5 @@
 import TerminalBoot from "@/components/TerminalBoot";
+import ProblemSection from "@/components/ProblemSection";
 import ProjectsDoor from "@/components/ProjectsDoor";
 import MetricsSection from "@/components/MetricsSection";
 import HackathonWall from "@/components/HackathonWall";
@@ -20,6 +21,8 @@ export default function Home() {
       <section className="flex min-h-screen flex-col items-start justify-center px-6 py-24 sm:px-12 md:px-20">
         <TerminalBoot />
       </section>
+
+      <ProblemSection />
 
       <ProjectsDoor />
 
